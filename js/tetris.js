@@ -1,3 +1,5 @@
+import BLOCKS from "./blocks.js";
+
 // DOM
 const playground = document.querySelector(".playground > ul"); 
 
@@ -11,18 +13,11 @@ let duration = 500;
 let downInterval ;
 let tempMovingItem;
 
-const BLOCKS = {
-    tree: [ //방향키를 돌렸을때 각각의 모양 즉 4개의 배열
-        [[2,1],[0,1],[1,0],[1,1]],
-        [[1,2],[0,1],[1,0],[1,1]],
-        [[1,2],[0,1],[2,1],[1,1]],
-        [[2,1],[1,2],[1,0],[1,1]],
-    ]
-}
+
 
 const movingItem = {
     type: "tree",
-    direction: 2, //방향키를 눌렀을 때 도형의 회전을 도와주는 지표 역할
+    direction: 3, //방향키를 눌렀을 때 도형의 회전을 도와주는 지표 역할
     top: 0, //좌표를 기준으로 어디까지 내려왔는지를 표현
     left: 0, //좌우값을 알려주는 역할
 };
@@ -30,9 +25,10 @@ const movingItem = {
 init()
 
 // functions
-function init(){    
+function init(){   
+    
     tempMovingItem = { ...movingItem }; //...: separate operater. movingItem 객체의 주소값이 아니라 단순히 값만 가져옴
-    for(let i = 0; i < GAME_ROWS; i++){
+    for (let i = 0; i < GAME_ROWS; i++) {
         prependNewLine()
     }
     renderBlocks()
@@ -41,7 +37,7 @@ function init(){
 function prependNewLine(){
     const li = document.createElement("li");
     const ul = document.createElement("ul");
-    for(let j = 0; j < GAME_COLS; j++){
+    for (let j = 0; j < GAME_COLS; j++) {
         const matrix = document.createElement("li");
         ul.prepend(matrix);
     }
@@ -49,40 +45,55 @@ function prependNewLine(){
     playground.prepend(li);
 }
 
-function renderBlocks(moveType=""){
+function renderBlocks(moveType = "") {
     const { type, direction, top, left } = tempMovingItem;
     const movingBlocks = document.querySelectorAll(".moving");
-    movingBlocks.forEach(moving=>{
+    movingBlocks.forEach(moving => {
         moving.classList.remove(type, "moving"); //이전모양 지우기
     })
-    BLOCKS[type][direction].some( block => {
+    BLOCKS[type][direction].some(block => {
         const x = block[0] + left;
         const y = block[1] + top;
         const target = playground.childNodes[y] ? playground.childNodes[y].childNodes[0].childNodes[x] : null;
         const isAvailable = checkEmpty(target);
-        if(isAvailable){
+        if (isAvailable) {
             target.classList.add(type, "moving")
-        } else{
+        } else {
             tempMovingItem = { ...movingItem }
-            setTimeout(()=>{
+            setTimeout(() => {
                 renderBlocks();
-                if(moveType === "top"){
+                if (moveType === "top") {
                     seizeBlock();
                 }
             }, 0)
             return true;
         }
-    })
+    }) 
     movingItem.left = left;
     movingItem.top = top;
     movingItem.direction = direction;
 }
-function seizeBlock(){
-    console.log("seize block")
+function seizeBlock() {
+    const movingBlocks = document.querySelectorAll(".moving");
+    movingBlocks.forEach(moving => {
+        moving.classList.remove("moving"); //이전모양 지우기
+        moving.classList.add("seized");
+    })
+    generateNewBlock()
+}
+function generateNewBlock(){
+    const blockArray = Object.entries(BLOCKS);
+    const randomIndex = Math.floor(Math.random() * blockArray.length) 
+    movingItem.type = blockArray[randomIndex][0]
+    movingItem.top = 0;
+    movingItem.left = 3;
+    movingItem.direction = 0;
+    tempMovingItem = {...movingItem};
+    renderBlocks()
 }
 
 function checkEmpty(target){
-    if(!target){
+    if(!target || target.classList.contains("seized")){
         return false;
     }
     return true;
@@ -90,11 +101,11 @@ function checkEmpty(target){
 
 function moveBlock(moveType, amount){
     tempMovingItem[moveType] += amount;
-    renderBlocksmoveType()
+    renderBlocks(moveType)
 }
 function changeDerection(){
     const direction = tempMovingItem.direction;
-    direction ===3 ? tempMovingItem.direction = 0 : tempMovingItem.direction += 1
+    direction === 3 ? tempMovingItem.direction = 0 : tempMovingItem.direction += 1
     renderBlocks()
 }
 
